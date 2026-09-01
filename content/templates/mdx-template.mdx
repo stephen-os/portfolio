@@ -1,0 +1,340 @@
+---
+title: "MDX Reference — Every Supported Feature"
+description: "Living reference for everything the MDX renderer supports: frontmatter, markdown, code highlighting, layout components, and images."
+date: "2026-07-20"
+tags: ["meta", "reference", "mdx"]
+published: true
+---
+
+Nothing in `content/templates/` is compiled — it sits outside Velite's
+`posts/**/index.mdx` and `projects/**/index.mdx` globs, so it never becomes a
+route. Two consequences:
+
+1. You can keep this here forever without it appearing on the site.
+2. **It is never type-checked or built.** A syntax error here only surfaces
+   once you copy it into `content/posts/`. Build after copying.
+
+To start a new post: copy `content/templates/post/` to
+`content/posts/<your-slug>/`. For a project, copy `content/templates/project/`
+to `content/projects/<your-slug>/`.
+
+## Folder layout and slugs
+
+Each post or project owns a folder. The **folder name becomes the slug** —
+`content/posts/my-first-post/` serves at `/posts/my-first-post`. That is
+computed by `folderSlug` in `velite.config.ts`, not from the filename, which is
+always `index.mdx`.
+
+```bash
+content/posts/my-first-post/
+├── index.mdx
+├── cover.jpg
+└── benchmark.png
+```
+
+Colocated assets are the point: reference them as `./cover.jpg` and Velite
+copies them into `public/static/` with a content hash. Delete the folder and
+every asset goes with it — no orphans under `public/`.
+
+## Frontmatter
+
+Schemas live in `velite.config.ts`. A missing required field **fails the
+build**, which is the intended safety net.
+
+### Posts
+
+| Field         | Required | Notes                                                        |
+| ------------- | :------: | ------------------------------------------------------------ |
+| `title`       |   Yes    | Max 120 chars                                                 |
+| `description` |   Yes    | Max 300 chars. Used as the meta description and OG summary    |
+| `date`        |   Yes    | ISO `YYYY-MM-DD`. Drives sort order on `/posts` and the home  |
+| `tags`        |   Yes    | Array of strings. May be empty (`[]`) but must be present     |
+| `image`       |    No    | `./cover.jpg` (colocated) or an absolute `/path.png`          |
+| `published`   |    No    | Defaults `true`. `false` hides it **and 404s the direct URL** |
+
+### Projects
+
+| Field         | Required | Notes                                                     |
+| ------------- | :------: | --------------------------------------------------------- |
+| `title`       |   Yes    | Max 120 chars                                              |
+| `description` |   Yes    | Max 300 chars                                              |
+| `date`        |   Yes    | ISO `YYYY-MM-DD`                                           |
+| `tags`        |   Yes    | Array of strings                                           |
+| `github`      |    No    | Full URL. Renders a "View Source" button                   |
+| `demo`        |    No    | Full URL. Renders a "Live Demo" button                     |
+| `featured`    |    No    | Defaults `false`. Featured projects get their own section  |
+| `image`       |    No    | Cover image                                                |
+| `images`      |    No    | **Accepted by the schema but not rendered anywhere yet**   |
+
+<Callout type="warning">
+  Projects have no `published` field. The only way to hide a project is to move
+  its folder out of `content/projects/`.
+</Callout>
+
+## Headings
+
+Start at `##`. The page already renders your `title` as the `<h1>`, so a `#`
+here would compete with it.
+
+### h3 is styled
+
+#### h4 is styled
+
+##### h5 is styled
+
+###### h6 is styled, muted
+
+## Text formatting
+
+**Bold**, *italic*, ***both***, and ~~strikethrough~~ (from `remark-gfm`).
+Inline `code` renders as an accent-coloured pill.
+
+> Blockquotes get an accent bar on the left.
+>
+> They can span multiple paragraphs.
+
+[Internal links](/projects) stay in the tab. [External links](https://nextjs.org)
+automatically get `target="_blank"` and `rel="noopener noreferrer"` — that
+detection lives in `MDXContent.tsx`, you don't annotate them.
+
+## Lists
+
+- Unordered item
+- Another item
+  - Nested item
+  - Another nested item
+
+1. Ordered item
+2. Second item
+3. Third item
+
+Task lists (GFM):
+
+- [x] Completed item
+- [ ] Outstanding item
+
+## Code blocks
+
+Shiki tokenises at build time, so there is zero syntax-highlighting JavaScript
+in the browser. Any Shiki-supported grammar works.
+
+```ts
+type Post = { slug: string; title: string; tags: string[] };
+
+const published = (posts: Post[]): Post[] => posts.filter((p) => p.published);
+```
+
+```python
+def fizzbuzz(n: int) -> str:
+    if n % 15 == 0: return "FizzBuzz"
+    if n % 3 == 0:  return "Fizz"
+    return str(n)
+```
+
+```glsl
+#version 330 core
+out vec4 FragColor;
+in vec3 Normal;
+
+void main() {
+    float diff = max(dot(normalize(Normal), vec3(0.0, 1.0, 0.0)), 0.0);
+    FragColor = vec4(vec3(diff), 1.0);
+}
+```
+
+```bash
+npm run dev
+```
+
+A fence with no language falls back to plaintext.
+
+### Titles and highlighting
+
+Add a title with `title="..."`, highlight lines with `{1,3-5}`, and highlight
+words with `/word/` — all in the meta string after the language:
+
+````mdx
+```ts title="src/lib/content.ts" {2-3} /getAllPosts/
+import { posts } from '#site/content';
+
+export function getAllPosts() {
+  return posts.filter((p) => p.published);
+}
+```
+````
+
+Which renders as:
+
+```ts title="src/lib/content.ts" {2-3} /getAllPosts/
+import { posts } from '#site/content';
+
+export function getAllPosts() {
+  return posts.filter((p) => p.published);
+}
+```
+
+## Tables
+
+| Component     | File                              | Purpose                    |
+| ------------- | --------------------------------- | -------------------------- |
+| `MDXContent`  | `src/components/MDXContent.tsx`   | Renders MDX                |
+| `PostCard`    | `src/components/PostCard.tsx`     | Item in the `/posts` list  |
+| `Tag`         | `src/components/Tag.tsx`          | A single tag pill          |
+
+Wide tables scroll horizontally rather than breaking the layout.
+
+## Horizontal rule
+
+---
+
+## Images
+
+Plain markdown. The alt text doubles as a visible caption underneath:
+
+![Colocated cover image, copied to /static with a content hash](./cover.jpg)
+
+<Callout type="info">
+  Body images render as a plain `<img>`, not `next/image` — so they are **not**
+  automatically optimised or lazy-sized. For a hero image where that matters,
+  use the frontmatter `image` field instead, which goes through `next/image`
+  with a blur placeholder.
+</Callout>
+
+### Charts and diagrams
+
+There is no chart or diagram library installed. Export from whatever tool you
+like — Excalidraw, Figma, matplotlib, draw.io — drop the file in the post
+folder, and reference it like any other image:
+
+```mdx
+![Frame time by rendering technique](./benchmark.png)
+```
+
+Prefer SVG where possible: it stays sharp and usually beats PNG on file size
+for charts and diagrams.
+
+### ImageGallery
+
+A responsive two-column grid. Wrap colocated markdown images — reference each by
+filename, sitting next to this file:
+
+<ImageGallery>
+
+![First image](graduation.jpg)
+
+![Second image](capwic.jpg)
+
+</ImageGallery>
+
+## Callouts
+
+<Callout type="info">
+  **Info** — context or background.
+</Callout>
+
+<Callout type="tip">
+  **Tip** — an actionable suggestion.
+</Callout>
+
+<Callout type="warning">
+  **Warning** — a gotcha or footgun.
+</Callout>
+
+## Columns
+
+Side-by-side content that collapses to a single column below the `md`
+breakpoint. Wrap each side in `<Column>` — without it, every loose paragraph
+becomes its own grid cell.
+
+<Columns>
+  <Column>
+    ### Left
+
+    Columns are useful for before/after comparisons, or pairing a code sample
+    with its explanation.
+  </Column>
+  <Column>
+    ### Right
+
+    Each column can hold anything — prose, code blocks, images, lists.
+  </Column>
+</Columns>
+
+Three columns with `count={3}`:
+
+<Columns count={3}>
+  <Column>**One**</Column>
+  <Column>**Two**</Column>
+  <Column>**Three**</Column>
+</Columns>
+
+## Centered content
+
+<Center>
+  Centers text and inline content.
+
+  Useful for a pull quote or a closing line.
+</Center>
+
+## How tags work
+
+Tags are plain strings in the frontmatter array. Today they render:
+
+1. As pills on the post/project card in the listing
+2. Next to the date on the detail page
+
+There is **no tag filtering or search on posts and projects yet** — clicking a
+tag does nothing. (The gallery is different: it has working category and tag
+filters, in `GalleryGrid.tsx`.)
+
+When you build search, the data is already in place: `getAllPosts()` and
+`getAllProjects()` return every tag, so filtering is
+`posts.filter((p) => p.tags.includes(tag))`. Deciding on a consistent tag
+vocabulary now — language names, topic names — will save a cleanup later.
+
+## Not supported
+
+Deliberately listed so you don't lose time trying:
+
+- **Chart/diagram libraries** — no Mermaid, no Recharts. Use exported images.
+- **Tag filter pages** — no `/posts/tag/graphics` route.
+- **Footnotes** — `remark-gfm` supports them, but there is no styling.
+- **Auto-linked heading anchors** — no `rehype-slug`/`rehype-autolink-headings`.
+- **Table of contents** — not generated.
+- **Line numbers in code blocks** — `showLineNumbers` is not configured.
+
+Each is a small addition if you want it later.
+
+## Copy-paste starters
+
+Post:
+
+```mdx
+---
+title: "Your title"
+description: "One sentence, shown in the listing and as the meta description."
+date: "2026-07-20"
+tags: ["graphics", "opengl"]
+image: ./cover.jpg
+published: true
+---
+
+Your content here.
+```
+
+Project:
+
+```mdx
+---
+title: "Project name"
+description: "One sentence about what it is."
+date: "2026-07-20"
+tags: ["cpp", "opengl"]
+github: "https://github.com/stephen-os/project"
+demo: "https://example.com"
+featured: true
+image: ./cover.jpg
+---
+
+Your content here.
+```

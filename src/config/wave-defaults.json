@@ -1,0 +1,15 @@
+{
+  "frequency": 2,
+  "amplitude": 30,
+  "speed": 0.1,
+  "waveType": "sine",
+  "layers": 1,
+  "opacity": 8,
+  "glow": true,
+  "mirror": false,
+  "showGrid": true,
+  "perspective": false,
+  "scanlines": false,
+  "mouseReact": true,
+  "fillWave": true
+}

@@ -1,0 +1,54 @@
+{
+  "name": "portfolio",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "dev": "concurrently -n velite,next -c yellow,cyan \"velite --watch\" \"next dev\"",
+    "build": "velite && next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "velite && vitest run",
+    "test:watch": "vitest",
+    "velite": "velite",
+    "knip": "knip",
+    "secretlint": "secretlint --maskSecrets --secretlintignore .gitignore \"**/*\"",
+    "linkcheck": "start-server-and-test start http://localhost:3000 \"linkinator http://localhost:3000 --recurse --retry --skip linkedin.com\""
+  },
+  "dependencies": {
+    "@vercel/analytics": "^2.0.1",
+    "framer-motion": "^12.43.0",
+    "next": "^16.3.2",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "rehype-pretty-code": "^0.14.5",
+    "remark-gfm": "^4.0.1",
+    "resend": "^6.22.0",
+    "velite": "^0.4.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@secretlint/secretlint-rule-preset-recommend": "^13.0.4",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^26.2.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "concurrently": "^10.0.5",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.3.2",
+    "knip": "^6.32.2",
+    "linkinator": "^8.0.4",
+    "postcss": "^8.5.26",
+    "secretlint": "^13.0.4",
+    "start-server-and-test": "^3.0.12",
+    "tailwindcss": "^4.1.18",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.11"
+  },
+  "overrides": {
+    "sharp": "^0.35.3"
+  }
+}

@@ -1,0 +1,61 @@
+---
+title: "Temp Post — Velite Demo"
+description: "A throwaway post created during the Velite migration. Demonstrates the per-folder content layout, colocated images, and end-to-end rendering."
+date: "2026-05-06"
+tags: ["meta", "velite", "demo"]
+image: ./cover.jpg
+published: true
+---
+
+This post lives at `content/posts/temp-post/index.mdx`. The cover image above is `./cover.jpg` in the same folder — Velite copies it into `public/static/`, hashes the filename, and generates a blur placeholder automatically.
+
+## What changed in the migration
+
+Before this branch, posts lived flat: `content/posts/<slug>.mdx`. Images lived separately under `public/images/`. The two were linked only by a string path you had to hand-type.
+
+Now each post owns a folder. You can drop images, code samples, or other assets next to the post and reference them with relative paths. When you delete the folder, everything goes with it.
+
+## Code highlighting still works
+
+Velite runs `rehype-pretty-code` at build time, so this block gets tokenized by Shiki:
+
+```ts
+import { posts } from '#site/content';
+
+export function getRecentPosts(count = 3) {
+  return posts
+    .filter((p) => p.published)
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, count);
+}
+```
+
+Inline code like `getRecentPosts()` still gets the pill style.
+
+## GFM features
+
+| Feature           | Status   |
+| ----------------- | -------- |
+| Tables            | Working  |
+| Strikethrough     | ~~old~~ → new |
+| Task lists        | Below    |
+
+- [x] Velite installed
+- [x] Schemas defined
+- [x] Per-folder layout
+- [ ] Migrate gallery (later)
+
+## Custom components
+
+<Callout type="tip">
+  This `Callout` component is rendered exactly like before — the `components` map in `MDXContent.tsx` carries over verbatim. Velite only changed *how* the MDX gets compiled, not what it renders into.
+</Callout>
+
+## Authoring a new post
+
+1. Run `mkdir content/posts/<your-slug>`
+2. Drop `index.mdx` and any images inside
+3. Reference images as `./your-image.png` in frontmatter or body
+4. Save — `velite --watch` rebuilds, Next picks up the change
+
+That's it. No public/ wiring, no path duplication.

@@ -1,0 +1,30 @@
+---
+title: "Temp Project — Velite Demo"
+description: "A placeholder project showing per-folder layout with a colocated cover image."
+date: "2026-05-06"
+tags: ["meta", "demo"]
+image: ./cover.jpg
+featured: false
+---
+
+This is a placeholder project that lives at `content/projects/temp-project/index.mdx`.
+
+## Same structural rules as posts
+
+Each project owns a folder under `content/projects/`. Cover images and any inline assets sit next to `index.mdx` and get referenced with relative paths.
+
+```bash
+content/projects/temp-project/
+├── index.mdx
+└── cover.jpg
+```
+
+## Optional fields
+
+The `ProjectFrontmatter` schema accepts:
+
+- `github` — repo URL, renders as a "View Source" button
+- `demo` — live demo URL, renders as a "Live Demo" button
+- `featured` — boolean, surfaces the project on the homepage
+
+This temp project has none set, so the page stays minimal.
