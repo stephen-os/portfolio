@@ -44,26 +44,30 @@ export function HomePage({ featuredProjects, recentPosts, waveConfig }: HomePage
         {/* Featured Projects and Recent Posts side by side */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
           <DashboardCard title="Featured Projects" viewAllHref="/projects" from="left">
-            {featuredProjects.map((project, index) => (
-              <motion.li
-                key={project.slug}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: staggerDelay(index, 0.08, 0.6) }}
-              >
-                <DashboardTile
-                  href={`/projects/${project.slug}`}
-                  title={project.title}
-                  subtitle={project.tags.slice(0, 3).join(' · ')}
-                  background="bg-bg"
-                />
-              </motion.li>
-            ))}
+            {featuredProjects.length === 0 ? (
+              <li className="text-sm text-muted px-3 py-2">No projects yet. Check back soon!</li>
+            ) : (
+              featuredProjects.map((project, index) => (
+                <motion.li
+                  key={project.slug}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: staggerDelay(index, 0.08, 0.6) }}
+                >
+                  <DashboardTile
+                    href={`/projects/${project.slug}`}
+                    title={project.title}
+                    subtitle={project.tags.slice(0, 3).join(' · ')}
+                    background="bg-bg"
+                  />
+                </motion.li>
+              ))
+            )}
           </DashboardCard>
 
           <DashboardCard title="Recent Posts" viewAllHref="/posts" from="right">
             {recentPosts.length === 0 ? (
-              <li className="text-sm text-muted px-3 py-2">No posts yet — check back soon.</li>
+              <li className="text-sm text-muted px-3 py-2">No posts yet. Check back soon!</li>
             ) : (
               recentPosts.map((post, index) => (
                 <motion.li
