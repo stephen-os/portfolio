@@ -1,0 +1,233 @@
+---
+title: "ByteDojo"
+description: "A command-line tool for practicing LeetCode problems your way: keep every attempt across languages and approaches, not just the one 'fastest' solution, and let spaced review bring problems back around. Python, SQLite, runs in any terminal."
+date: "2025-12-11"
+tags: ["Python", "CLI", "SQLite", "LeetCode"]
+github: "https://github.com/stephen-os/bytedojo"
+featured: false
+---
+
+![](banner.png)
+
+ByteDojo is a command-line tool for grinding LeetCode problems, built around something
+LeetCode itself has never really cared about: solving a problem once, the "fastest" way, in
+one language, is not the same as learning it.
+
+## Why I built it
+
+The gap that actually bugged me is that you can't *version* a problem on LeetCode. You solve it
+once and that's the end of it. There's no real way to come back later, try it again in another
+language or from a different angle, and keep all of those attempts side by side. That's the thing
+I built ByteDojo around, with repetition as the path: the skill isn't volume, it's revisiting.
+
+Volume is part of it too. LeetCode has a mountain of problems, and I don't buy that you need to
+grind through thousands of them. A solid handful, genuinely understood and returned to, gets you
+most of the way there. ByteDojo ships with most of the coding problems, but which ones you keep
+practicing over is up to you.
+
+None of this is really how LeetCode is built. It used to have a feature called Sessions, basically
+sub-accounts that tracked your solved problems on their own, so you could reset the board and grind
+a set again. They quietly retired it. And what it chooses to measure tells the rest of the story:
+it only cares about one number, the single fastest, most memory-efficient solution you've
+submitted. Great if you're chasing the top of a leaderboard. I'm not. I want to understand why two
+solutions differ and what each approach is good for, which is exactly what versioning a problem
+lets you see.
+
+So that's what ByteDojo does. It treats a problem as something you return to, not a box you tick
+once. Every attempt is kept: the same problem across versions, across languages, each outcome
+recorded, instead of one pass/fail against whatever the "best" answer was that day.
+
+## What it does
+
+### Repetition, on purpose
+
+Problems you've passed come back around. That's the whole point, and not just for stuff you've
+never seen. The problems you *have* solved, but haven't touched in months, are where most of
+the forgetting happens, so those are exactly the ones worth revisiting. Some of them are just
+great teachers. Trapping Rain Water is one of my favorites: a clean lesson in walking an array
+with multiple passes, forward and backward, and it's genuinely fun because it's really a 2D
+problem hiding in a 1D array. Problems like that earn a permanent spot in the rotation.
+
+ByteDojo schedules solved problems for review on a cadence you set, and records a pass, fail,
+or skip on every attempt, so you can actually see what's stuck and what's slipping.
+
+### One problem, many attempts
+
+Every fetch is a versioned attempt, laid out on disk as `problems/<id>-<slug>/<lang>/v###/`.
+That layout is the whole point. `--force` bumps a fresh version instead of clobbering the old
+one, so a first ugly pass and a cleaner rewrite both survive. Want to fix one specific take
+rather than start over? `--version 3` rewrites v3 in place. Just scribbling and don't want it in
+your tracked history at all? `--path ./scratch` drops an untracked copy with no database entry.
+The same problem, in Python and Rust, first attempt and fifth, all sitting side by side.
+
+### Wherever you already work
+
+I wanted this to run in any setup, and there's one thing every programming environment on earth
+has in common: a terminal. I mostly live in VS Code, but ByteDojo sits just as happily next to
+IntelliJ or anything else, on Windows or Linux. The whole loop is a handful of subcommands:
+
+```bash
+dojo init                      # start a .dojo repo in any folder
+
+dojo fetch 1                   # fetch one, in your default language
+dojo fetch 1,2,5..10 --java    # a list and a range at once, in Java
+dojo fetch 1 --force           # a fresh version; the old attempt stays put
+
+dojo pick -d medium -t tree    # stuck for what to do? a random medium tree problem
+dojo query -s "binary search"  # search descriptions, your status shown inline
+                               # (✓ passed  ✗ failed  ~ skipped  · not yet)
+
+dojo grade 1 --pass            # solved it: a quick pass, which schedules a review
+dojo review                    # what's due today
+dojo review complete 1 --good  # an SM-2 update; the interval grows as recall sticks
+```
+
+Fetch takes ranges and lists together, so pulling a themed set is a single command. `pick` hands
+you something at random when you don't care which, filtered by difficulty or tag. `query` is the
+browsable index, every problem stamped with your own pass, fail, or skip history. It all lives in
+a local SQLite database under `.dojo/`, so your whole practice record is one folder you own.
+
+## One dataset, any language
+
+Supporting more than one language turned out to be much harder than I expected. The trick I
+landed on is to keep the problem data completely language-agnostic and boil it into each
+language's syntax on the way out. Every problem carries a typed signature, so the tooling never
+has to guess what it's generating:
+
+```json title="data/problems/1.json (excerpt)"
+"signature": {
+  "params": [
+    { "name": "nums", "type": { "base": "ARRAY", "element": "INT32" } },
+    { "name": "target", "type": { "base": "INT32" } }
+  ],
+  "returns": { "base": "ARRAY", "element": "INT32" }
+}
+```
+
+Those `base` and `element` types come from a small primitives table (`INT32`, `INT64`,
+`STRING`, `BOOL`, and friends). Pinning the type up front, instead of inferring it at test time,
+is what lets one problem populate a stub in any language. LeetCode already ships a starter header
+per language, so much of the job is shaping my data into the flow that fits, say, Python versus
+C++. That range is deliberate: Python, Java, and C++ sit at very different levels of syntax
+complexity, so if the pipeline handles all three, it's proven across the spectrum. It only gets
+gnarlier from there, a lower-level language drags in manual memory, malloc and free, and the whole
+shape of a solution changes.
+
+Fetching is preprocessed, not scraped live: I pulled every problem I wanted to support into a
+JSON database, one file per problem, so nothing has to load a single blob of a few thousand
+entries just to open one. `dojo fetch 1` reads that locally and drops a ready-to-solve file,
+header, imports, and a typed stub:
+
+```python title="problems/0001-two-sum/python3/v001/solution.py"
+"""
+LeetCode Problem #1: Two Sum
+Difficulty: Easy
+Tags: Array, Hash Table
+"""
+
+# --- description ---
+# Given an array of integers nums and an integer target, return indices of
+# the two numbers such that they add up to target.
+# ...
+
+from collections import Counter, defaultdict, deque
+from functools import lru_cache
+from heapq import heappop, heappush
+from math import inf
+from typing import Dict, List, Optional, Set, Tuple
+
+# --- solution ---
+
+class Solution:
+    def twoSum(self, nums: List[int], target: int) -> List[int]:
+        pass
+
+
+# --- main ---
+
+if __name__ == "__main__":
+    pass
+```
+
+## How it tests, and where it gets hard
+
+This is the part still taking shape. Testing runs your code locally, which means it leans on you
+having the language installed: before a run, ByteDojo checks that support and the right paths
+exist for the language version it's expecting. There's some slack there, since plenty of versions
+will run the same code just fine. What I'd *like* to do is ship the language support with the tool
+and run submissions in a container, but that's a steep jump in complexity and might stay an idea.
+The simpler, likelier answer is just making sure you have the language available some way.
+
+The test data started as a real corpus:
+[newfacade/LeetCodeDataset](https://huggingface.co/datasets/newfacade/LeetCodeDataset) on Hugging
+Face. I migrated it down to only the tables I need, and since it was Python to begin with, the
+values were already close to language-agnostic, easy to reshape into primitives any language can
+take. Each problem gets its own typed bundle:
+
+```json title="data/tests/1.json (excerpt)"
+{
+  "problem_id": 1,
+  "title": "Two Sum",
+  "method": "twoSum",
+  "comparison": "unordered_all",
+  "cases": [
+    { "case_id": 1, "input": { "nums": [3, 3], "target": 6 }, "expected": [0, 1] },
+    { "case_id": 2, "input": { "nums": [-1, -2, -3, -4], "target": -8 }, "expected": null },
+    { "case_id": 3, "input": { "nums": [1000000000, 1000000000], "target": 2000000000 }, "expected": [0, 1] }
+  ]
+}
+```
+
+That `comparison` field earns its place: "return the indices in any order" is a real spec, so a
+bundle can say `unordered_all` and the runner sorts both sides before comparing. My whole aim with
+this data was cutting the cycle time down to a fast green check.
+
+The honest limits are real, though. The dataset is finite, and its inputs aren't nearly as
+punishing as LeetCode's, so ByteDojo can't grade for the *best* solution, the time-and-space
+winner, because it takes big, ugly inputs to make an algorithm's true cost show. And it only
+covers the coding problems solvable in Python, since I modeled what I can fetch after that dataset.
+
+<Callout type="info">
+  None of that is really the point, though. ByteDojo isn't trying to replace LeetCode. It's about
+  the problem-solving in the moment: a shipped set of tests, boiled into whatever language you're
+  working in, enough to know your solution works without tab-hopping to LeetCode just to check.
+  But until you paste it in over there, you won't know for certain LeetCode would accept it, and
+  that's fine by me.
+</Callout>
+
+## Roadmap
+
+Where it stands today, and where it's headed next.
+
+<Roadmap
+  shipped={[
+    "Fetch, solve, grade, and review workflow",
+    "Versioned attempts across languages",
+    "Spaced review with SM-2 scheduling",
+    "Python, Java, and C++ formatters",
+    "Typed test bundles from the migrated dataset",
+  ]}
+  inProgress={[
+    "Running solutions against the bundles: a local test runner and language detection",
+  ]}
+  planned={[
+    "Rust, TypeScript, and JavaScript",
+    "A full TUI for the whole loop",
+    "Bundled runtimes, so submissions run in a container",
+    "Grading for the best solution, on time and space",
+    "Zig, Ruby, and problems beyond LeetCode",
+  ]}
+/>
+
+## Tech stack
+
+| Layer | Technology | Role |
+| --- | --- | --- |
+| Language | Python 3.10+ | The `dojo` command and everything behind it |
+| Storage | SQLite (`.dojo/db.sqlite`) | The local file holding progress, attempts, and the review schedule |
+| Config | JSON settings | Language defaults and how often reviews come due |
+| Problem data | Bundled JSON | Around 2,500 problems and matching test bundles, one file each, preprocessed rather than scraped live |
+| Tests | pytest | The suite that keeps it honest |
+
+The repo is public and I'm genuinely open to contributions. A new language formatter is a
+self-contained place to jump in, most of the work is data, not plumbing.
