@@ -94,7 +94,10 @@ export default defineConfig({
       // `vesper` is a warm dark theme — amber/orange tokens that sit on the
       // carbon palette without introducing a competing colour family.
       // keepBackground: false so blocks use --color-bg-alt, not the theme's.
-      [rehypePrettyCode, { theme: 'vesper', keepBackground: false, defaultLang: 'plaintext' }],
+      // defaultLang is block-only: inline `code` stays un-highlighted so it
+      // renders as a plain pill, not a block-broken figure that wraps onto
+      // its own line inside prose and table cells.
+      [rehypePrettyCode, { theme: 'vesper', keepBackground: false, defaultLang: { block: 'plaintext' } }],
     ],
   },
 });
