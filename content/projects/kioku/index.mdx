@@ -143,16 +143,28 @@ It's also turned out more general than I planned. A friend's kid is studying for
 so I generated her a set of practice tests to drill. Same app, totally different subject. Which is
 exactly why images are on the list: a permit test without road signs is only half a test.
 
-## Where it's going
+## Roadmap
 
-- **Study anywhere, sync like Git.** A local copy that always works offline, changes pulled
-  automatically, and when two devices disagree, *you* decide which cards win: full control instead of
-  a silent last-write-wins that eats an edit. Overkill for a casual user, maybe, but cards and decks
-  *are* structured data, so treating them like a repo fits.
-- **Notes.** Markdown notes that live alongside the cards they came from, in development now.
-- **Images.** Not there yet, but high on the list: kanji, diagrams, road signs.
-- **Adaptive learning.** The progress tracking above is the foundation, surfacing what you're worst
-  at, more often.
+Where it stands today, and where it's headed next.
+
+<Roadmap
+  shipped={[
+    "Flashcards with syntax highlighting for 50+ languages",
+    "Quizzes with explanations and an answer history",
+    "Local-first desktop app on Tauri, for Windows, macOS, and Linux",
+    "Import and export as plain files: JSON decks, markdown notes",
+    "Bring-your-own-AI content, no model baked in",
+    "Goals and progress tracking",
+  ]}
+  inProgress={[
+    "Notes: markdown that lives alongside the cards it came from",
+  ]}
+  planned={[
+    "Study anywhere, with Git-style sync and you deciding which cards win a conflict",
+    "Images on cards: kanji, diagrams, road signs",
+    "Adaptive learning that surfaces your weak spots more often",
+  ]}
+/>
 
 ## Tech stack
 
