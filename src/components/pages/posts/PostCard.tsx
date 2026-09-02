@@ -7,7 +7,13 @@ import { StaggerHoverCard } from '@/components/visuals/motion';
 import { TagList } from '@/components/ui/TagList';
 import { FeaturedImage } from '@/components/ui/FeaturedImage';
 
-export function PostCard({ post }: { post: Post }) {
+export function PostCard({
+  post,
+  onTagClick,
+}: {
+  post: Post;
+  onTagClick?: (tag: string) => void;
+}) {
   return (
     <StaggerHoverCard className="card">
       {post.image && (
@@ -16,7 +22,7 @@ export function PostCard({ post }: { post: Post }) {
       <div className="flex items-center gap-3 mb-3 text-sm">
         <span className="text-muted">{formatDateShort(post.date)}</span>
         <span className="text-border">|</span>
-        <TagList tags={post.tags} variant="accent" />
+        <TagList tags={post.tags} variant="accent" onTagClick={onTagClick} />
       </div>
 
       <Link href={`/posts/${post.slug}`}>

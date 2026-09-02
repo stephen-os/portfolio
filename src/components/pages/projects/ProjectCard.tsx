@@ -7,7 +7,13 @@ import { GitHubIcon, ExternalLinkIcon } from '@/components/ui/icons';
 import { TagList } from '@/components/ui/TagList';
 import { FeaturedImage } from '@/components/ui/FeaturedImage';
 
-export function ProjectCard({ project }: { project: Project }) {
+export function ProjectCard({
+  project,
+  onTagClick,
+}: {
+  project: Project;
+  onTagClick?: (tag: string) => void;
+}) {
   return (
     <StaggerHoverCard className="card">
       {project.image && (
@@ -25,7 +31,7 @@ export function ProjectCard({ project }: { project: Project }) {
       </div>
 
       <div className="mb-4">
-        <TagList tags={project.tags} />
+        <TagList tags={project.tags} onTagClick={onTagClick} />
       </div>
 
       <div className="flex items-center gap-4">
