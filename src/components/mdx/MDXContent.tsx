@@ -122,6 +122,7 @@ const components = {
   Columns,
   Column,
   Center,
+  Roadmap,
 };
 
 // Custom component: Image Gallery. Put colocated markdown images inside the tag;
@@ -161,6 +162,60 @@ function Column({ children }: { children?: React.ReactNode }) {
 // Custom component: centers text and inline content.
 function Center({ children }: { children?: React.ReactNode }) {
   return <div className="my-6 text-center">{children}</div>;
+}
+
+// Roadmap: development state grouped as Shipped / In progress / Planned. Each
+// item carries a status badge; colours come from the theme's success/warning/
+// muted tokens. Empty groups are dropped so a page shows only the buckets it uses.
+type RoadmapProps = {
+  shipped?: string[];
+  inProgress?: string[];
+  planned?: string[];
+};
+
+type RoadmapGroup = {
+  label: string;
+  items: string[];
+  labelClass: string;
+  badgeClass: string;
+  glyph: string;
+};
+
+function Roadmap({ shipped = [], inProgress = [], planned = [] }: RoadmapProps) {
+  const groups: RoadmapGroup[] = [
+    { label: 'Shipped', items: shipped, labelClass: 'text-success', badgeClass: 'bg-success/15 text-success', glyph: '✓' },
+    { label: 'In progress', items: inProgress, labelClass: 'text-warning', badgeClass: 'bg-warning/15 text-warning', glyph: '●' },
+    { label: 'Planned', items: planned, labelClass: 'text-muted', badgeClass: 'border border-border text-muted', glyph: '○' },
+  ];
+  return (
+    <div className="my-6 space-y-6">
+      {groups
+        .filter((group) => group.items.length > 0)
+        .map((group) => (
+          <div key={group.label}>
+            <div className="flex items-center gap-2 mb-3">
+              <span className={`text-xs font-semibold uppercase tracking-wider ${group.labelClass}`}>
+                {group.label}
+              </span>
+              <span className="text-xs text-muted">{group.items.length}</span>
+            </div>
+            <ul className="space-y-2">
+              {group.items.map((item) => (
+                <li key={item} className="flex items-start gap-3">
+                  <span
+                    aria-hidden="true"
+                    className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs leading-none ${group.badgeClass}`}
+                  >
+                    {group.glyph}
+                  </span>
+                  <span className="text-fg">{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+    </div>
+  );
 }
 
 // Custom component: Callout box
